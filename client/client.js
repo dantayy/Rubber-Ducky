@@ -1,0 +1,123 @@
+//function to handle xhr response
+const handleResponse = (xhr, parseResponse) => {
+    //grab the content section
+    const content = document.querySelector("#content");
+    //create h1 and p to hold our response data for the page
+    const h1 = document.createElement('h1');
+    const p = document.createElement('p');
+    //apply text to the h1 based on the status code
+    switch(xhr.status) {
+        case 200: //success
+            h1.innerHTML = `<b>Success</b>`;
+            break;
+        case 201: //created
+            h1.innerHTML = `<b>Created</b>`;
+            break;
+        case 204: //updated
+            h1.innerHTML = `<b>Updated</b>`;
+            break;
+        case 400: //bad request 
+            h1.innerHTML = `<b>Bad Request</b>`;
+            break;
+        case 401: //unauthorized 
+            h1.innerHTML = `<b>Unauthorized</b>`;
+            break;
+        case 403: //forbidden 
+            h1.innerHTML = `<b>Forbidden</b>`;
+            break;
+        case 404: //not found (requested resource does not exist)
+            h1.innerHTML = `<b>Resource Not Found</b>`;
+            break;
+        case 500: //internal server error
+            h1.innerHTML = `<b>Internal Server Error</b>`;
+            break;
+        case 501: //not implemented
+            h1.innerHTML = `<b>Not Implemented</b>`;
+            break;
+        default: //default other errors we are not handling in this example
+            h1.innerHTML = `<b>Error code not implemented by client.</b>`;
+            break;
+    }
+    //append the h1 to the content.
+    content.appendChild(h1);
+    // default message
+    p.innerHTML = '(No Content)';
+
+    //parse response if the request asked to do so and info isn't just being updated
+    if(parseResponse && xhr.status !== 204){
+        const obj = JSON.parse(xhr.response);
+        console.log(obj);
+        //if message in response, add to screen
+        if(obj.message) {
+            p.innerHTML = `Message: ${obj.message}`;
+        }
+        //if users in resp`onse, add to screen
+        if(obj.users) {
+            const users = JSON.stringify(obj.users);
+            p.innerHTML = users;
+        }
+    }
+    //append the p to the content
+    content.appendChild(p);
+};
+//function to send request to server
+const requestUpdate = (e, userForm) => {
+    //get the action (url) and method (request type) from passed form
+    let formAction = userForm.getAttribute('action');
+    let formMethod = userForm.getAttribute('method');
+
+    //handle case of the url selected being "notReal"
+    if(userForm.querySelector("#urlField")){
+        if(userForm.querySelector("#urlField").value === "/notReal"){
+            formAction = "/notReal";
+        }
+    }
+
+    //handle case of request selected being "head"
+    if(userForm.querySelector("#methodSelect")){
+        if(userForm.querySelector("#methodSelect").value === "head"){
+            formMethod = "head";
+        }
+    }
+    //open a new xmlhttprequest based on passed form action/method
+    const xhr = new XMLHttpRequest();
+    xhr.open(formMethod, formAction);
+    //when a response is recieved call the handleResponse function
+    if(formMethod === "head"){
+        xhr.onload = () => handleResponse(xhr, false);
+    } else {
+        xhr.onload = () => handleResponse(xhr, true);
+    }
+    //handle a post request
+    if(formMethod === "post") {
+        //get the name and age to pass to the server
+        const nameField = userForm.querySelector('#nameField');
+        const ageField = userForm.querySelector('#ageField');
+        //type used when parsing url query strings
+        xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
+
+        //send an ajax request with the parsed form data
+        const formData = `name=${nameField.value}&age=${ageField.value}`;
+        xhr.send(formData);
+    } else { //handle get or head requests
+        //send basic ajax request
+        xhr.send();
+    } 
+    //prevent the browser's default action (to send the form on its own)
+    e.preventDefault();
+    //return false to prevent the browser from trying to change page
+    return false;
+};
+const init = () => {
+    //grab the relevent items from the page and start listening to them
+    const sendUserForm = document.querySelector("#nameForm");
+    const getUserForm = document.querySelector("#userForm");
+    //functions to handle our requests
+    const sendUsers = (e) => requestUpdate(e, sendUserForm);
+    const getUsers = (e) => requestUpdate(e, getUserForm);
+    //add event listeners to the send buttons
+    sendUserForm.addEventListener('submit', sendUsers);
+    getUserForm.addEventListener('submit', getUsers);
+};
+//load the init function when the page loads
+window.onload = init;
