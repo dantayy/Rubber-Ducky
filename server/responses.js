@@ -8,11 +8,10 @@ const index = fs.readFileSync(`${__dirname}/../hosted/client.html`);
 const css = fs.readFileSync(`${__dirname}/../hosted/style.css`);
 const jsBundle = fs.readFileSync(`${__dirname}/../hosted/bundle.js`);
 
-// Note this object is purely in memory
-// When node shuts down this will be cleared.
-// Same when your heroku app shuts down from inactivity
-// We will be working with databases in the next few weeks.
+// Issues object container and id var to be incremented when new issues are made
 const users = {};
+const issues = {};
+let issueId = 0;
 
 // for object to respond with when there are status messages/ids
 const responseJSON = {};
@@ -55,12 +54,10 @@ const respondJSONMeta = (request, response, status) => {
     response.end();
 };
 
-// add a user
-const addUser = (request, response) => {
-    // vars for processing data sent to server for adding a user
+// handle a general post request
+const handlePost = (request, response, parsedUrl) => {
+    // vars for processing data sent to server for adding an issue
     const body = [];
-    let bodyString = '';
-    let bodyParams = {};
 
     // .on calls are like event listeners triggering as the users data stream is being processed
     request.on('error', (err) => {
@@ -77,46 +74,68 @@ const addUser = (request, response) => {
 
     // make data processed easier to handle by putting the params into an obj
     request.on('end', () => {
-        bodyString = Buffer.concat(body).toString();
-        bodyParams = query.parse(bodyString);
-
-        // start with failstate message and check for missing params first
-        responseJSON.message = 'Name and age are both required';
-        if (!bodyParams.name || !bodyParams.age) {
-            responseJSON.id = 'missingParams';
-            return respondJSON(request, response, 400, responseJSON);
-        }
-
-        // potential response code if a new user was made
-        let responseCode = 201;
-        // case of a user needing to be updated rather than created
-        if (users[bodyParams.name]) {
-            responseCode = 204;
-        } else { // create a new user
-            users[bodyParams.name] = {};
-        }
-
-        // set the user's values
-        users[bodyParams.name].name = bodyParams.name;
-        users[bodyParams.name].age = bodyParams.age;
-
-        // send a response with an obj if a new user was created
-        if (responseCode === 201) {
-            delete respondJSON.id;
-            responseJSON.message = 'Created Successfully';
-            return respondJSON(request, response, responseCode, responseJSON);
-        }
-
-        // return only header data if stuff was updated rather than created
-        return respondJSONMeta(request, response, responseCode);
+        const bodyString = Buffer.concat(body).toString();
+        return query.parse(bodyString);
     });
 };
 
-// return the users list
-const getUsers = (request, response) => respondJSON(request, response, 200, {users});
+// add an issue
+const addIssue = (request, response, postParams) => {
+    // start with failstate message and check for missing params first
+    responseJSON.message = 'Need to type in an issue first!';
+    if (!postParams.issue) {
+        responseJSON.id = 'missingText';
+        return respondJSON(request, response, 400, responseJSON);
+    }
 
-// return only a 200 status in this case
-const getUsersMeta = (request, response) => respondJSONMeta(request, response, 200);
+    // response code for new issue being created
+    let responseCode = 201;        
+    // new issue object located at the index of the id
+    issues[issueId] = {};
+    // set the issue's parameters
+    issues[issueId].id = issueId;
+    issues[issueId].issue = postParams.issue;
+    issues[issueId].quack = false;
+    issues[issueId].comments = {};
+
+    delete responseJSON.id;
+    responseJSON.message = `Created Issue #${issueId}`;
+    issueId++;
+    return respondJSON(request, response, responseCode, responseJSON);
+};
+
+// add a comment to an issue
+const addComment = (request, response, postParams, params) => {
+
+    // check failstates first
+    responseJSON.message = 'Need to type in an comment first!';
+    if (!postParams.comment) {
+        responseJSON.id = 'missingText';
+        return respondJSON(request, response, 400, responseJSON);
+    } else if (!params.id) {
+        responseJSON.message = `Need to specify which issue you're commenting on!`;
+        responseJSON.id = 'missingId';
+        return respondJSON(request, response, 400, responseJSON);
+    } else if (!issues[params.id]) {
+        responseJSON.message = `Specified issue does not exist`;
+        responseJSON.id = 'badId';
+        return respondJSON(request, response, 400, responseJSON);
+    }
+
+    // update the issue's comment list with the submitted comment
+    let responseCode = 204;
+    issues[params.id].comments.push(postParams.comment);
+    return respondJSONMeta(request, response, responseCode);
+};
+
+// return the issues list
+const getIssues = (request, response, params) => {
+    if(params.id && issues[params.id]){
+        let singleIssue = issues[params.id];
+        return respondJSON(request, response, 200, {singleIssue});
+    }
+    return respondJSON(request, response, 200, {issues});
+};
 
 // send back notReal info
 const notReal = (request, response) => {
@@ -134,9 +153,9 @@ module.exports = {
     getIndex,
     getCSS,
     getBundle,
-    getUsers,
-    getUsersMeta,
+    getIssues,
     notReal,
     notRealMeta,
-    addUser,
+    addIssue,
+    addComment
 };

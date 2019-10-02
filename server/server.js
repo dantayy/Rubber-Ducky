@@ -2,6 +2,8 @@
 const http = require('http');
 // url module for parsing url string
 const url = require('url');
+// querystring module for parsing querystrings from url
+const query = require('querystring');
 // pull in our custom file
 const responseHandler = require('./responses.js');
 
@@ -19,16 +21,42 @@ const urlStruct = {
         '/': responseHandler.getIndex,
         '/style.css': responseHandler.getCSS,
         '/bundle.js': responseHandler.getBundle,
-        '/getUsers': responseHandler.getUsers,
+        '/getIssues': responseHandler.getIssues,
         '/notReal': responseHandler.notReal,
     },
     HEAD: {
-        '/getUsers': responseHandler.getUsersMeta,
         '/notReal': responseHandler.notRealMeta,
     },
     POST: {
-        '/addUser': responseHandler.addUser,
+        '/addIssue': responseHandler.addIssue,
+        '/addComment': responseHandler.addComment,
     },
+};
+
+// handle a general post request
+const handlePost = (request, response, parsedUrl, params) => {
+    // vars for processing data sent to server for adding an issue
+    const body = [];
+
+    // .on calls are like event listeners triggering as the users data stream is being processed
+    request.on('error', (err) => {
+        console.log(err);
+        response.statusCode = 400;
+        response.end();
+    });
+
+    // process data
+    request.on('data', (chunk) => {
+        console.log("Processing data");
+        body.push(chunk);
+    });
+
+    // make data processed easier to handle by putting the params into an obj
+    request.on('end', () => {
+        const bodyString = Buffer.concat(body).toString();
+        const bodyParams = query.parse(bodyString);
+        urlStruct[request.method][parsedUrl.pathname](request, response, bodyParams, params);
+    });
 };
 
 // when a call is made to this server run this
@@ -36,11 +64,13 @@ const onRequest = (request, response) => {
     // parse the url using the url module
     // This will let us grab any section of the URL by name
     const parsedUrl = url.parse(request.url);
-
+    const params = query.parse(parsedUrl.query);
     // check if the path name (the /name part of the url) matches
     // any in our url object. If so call that function. If not, default to notReal
-    if (urlStruct[request.method][parsedUrl.pathname]) {
-        urlStruct[request.method][parsedUrl.pathname](request, response);
+    if(request.method === "POST"){
+        handlePost(request, response, parsedUrl, params);
+    } else if (urlStruct[request.method][parsedUrl.pathname]) {
+        urlStruct[request.method][parsedUrl.pathname](request, response, params);
     } else {
         urlStruct[request.method]['/notReal'](request, response);
     }

@@ -2,6 +2,8 @@
 const handleResponse = (xhr, parseResponse) => {
     //grab the content section
     const content = document.querySelector("#content");
+    //clear the content section
+    content.innerHTML = "";
     //create h1 and p to hold our response data for the page
     const h1 = document.createElement('h1');
     const p = document.createElement('p');
@@ -51,34 +53,46 @@ const handleResponse = (xhr, parseResponse) => {
         if(obj.message) {
             p.innerHTML = `Message: ${obj.message}`;
         }
-        //if users in resp`onse, add to screen
-        if(obj.users) {
-            const users = JSON.stringify(obj.users);
-            p.innerHTML = users;
+        //if issues in response, add to screen
+        if(obj.issues) {
+            const issues = JSON.stringify(obj.issues);
+            p.innerHTML = issues;
+        }
+        //if a single issue in response, add it to the screen with the comment form
+        if(obj.singleIssue) {
+            const singleIssue = JSON.stringify(obj.singleIssue);
+            p.innerHTML = `${singleIssue} \n 
+                <form id="commentForm" action="/addComment" method="post" issueNum=${singleIssue.id}>
+                    <label for="comment">Comment: </label>
+                    <textarea id="commentField" type="text" name="comment"></textarea>
+                    <input type="submit" value="Add Comment" />
+                </form>`;
+            //have to redo the init setup each time a comment form is pulled
+//            let commentForm = document.querySelector("#commentForm");
+//            let sendComment = (e) => requestUpdate(e, commentForm);
+//            commentForm.addEventListener('submit', sendComment);
         }
     }
     //append the p to the content
     content.appendChild(p);
 };
+
 //function to send request to server
-const requestUpdate = (e, userForm) => {
+const requestUpdate = (e, form) => {
     //get the action (url) and method (request type) from passed form
-    let formAction = userForm.getAttribute('action');
-    let formMethod = userForm.getAttribute('method');
+    let formAction = form.getAttribute('action');
+    let formMethod = form.getAttribute('method');
 
-    //handle case of the url selected being "notReal"
-    if(userForm.querySelector("#urlField")){
-        if(userForm.querySelector("#urlField").value === "/notReal"){
-            formAction = "/notReal";
-        }
+    //handle case of the url needing an added id query string
+    if(form.querySelector("#idField")){
+        formAction+=`?id=${form.querySelector("#idField").value}`;
     }
 
-    //handle case of request selected being "head"
-    if(userForm.querySelector("#methodSelect")){
-        if(userForm.querySelector("#methodSelect").value === "head"){
-            formMethod = "head";
-        }
+    //handle case of adding a comment
+    if(form.getAttribute('issueNum')){
+        formAction+=`?id=${form.getAttribute('issueNum')}`;
     }
+    
     //open a new xmlhttprequest based on passed form action/method
     const xhr = new XMLHttpRequest();
     xhr.open(formMethod, formAction);
@@ -90,14 +104,13 @@ const requestUpdate = (e, userForm) => {
     }
     //handle a post request
     if(formMethod === "post") {
-        //get the name and age to pass to the server
-        const nameField = userForm.querySelector('#nameField');
-        const ageField = userForm.querySelector('#ageField');
+        //get the issue to pass to the server
+        const issueField = form.querySelector('#issueField');
         //type used when parsing url query strings
         xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
 
         //send an ajax request with the parsed form data
-        const formData = `name=${nameField.value}&age=${ageField.value}`;
+        const formData = `issue=${issueField.value}`;
         xhr.send(formData);
     } else { //handle get or head requests
         //send basic ajax request
@@ -108,16 +121,17 @@ const requestUpdate = (e, userForm) => {
     //return false to prevent the browser from trying to change page
     return false;
 };
+
 const init = () => {
     //grab the relevent items from the page and start listening to them
-    const sendUserForm = document.querySelector("#nameForm");
-    const getUserForm = document.querySelector("#userForm");
+    const issueForm = document.querySelector("#issueForm");
+    const issueViewer = document.querySelector("#viewIssues");
     //functions to handle our requests
-    const sendUsers = (e) => requestUpdate(e, sendUserForm);
-    const getUsers = (e) => requestUpdate(e, getUserForm);
+    const sendIssue = (e) => requestUpdate(e, issueForm);
+    const getIssue = (e) => requestUpdate(e, issueViewer);
     //add event listeners to the send buttons
-    sendUserForm.addEventListener('submit', sendUsers);
-    getUserForm.addEventListener('submit', getUsers);
+    issueForm.addEventListener('submit', sendIssue);
+    issueViewer.addEventListener('submit', getIssue);
 };
 //load the init function when the page loads
 window.onload = init;
