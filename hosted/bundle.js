@@ -73,11 +73,7 @@ var handleResponse = function handleResponse(xhr, parseResponse) {
         //if a single issue in response, add it to the screen with the comment form
         if (obj.singleIssue) {
             var singleIssue = JSON.stringify(obj.singleIssue);
-            p.innerHTML = singleIssue + " \n \n                <form id=\"commentForm\" action=\"/addComment\" method=\"post\" issueNum=" + singleIssue.id + ">\n                    <label for=\"comment\">Comment: </label>\n                    <textarea id=\"commentField\" type=\"text\" name=\"comment\"></textarea>\n                    <input type=\"submit\" value=\"Add Comment\" />\n                </form>";
-            //have to redo the init setup each time a comment form is pulled
-            //            let commentForm = document.querySelector("#commentForm");
-            //            let sendComment = (e) => requestUpdate(e, commentForm);
-            //            commentForm.addEventListener('submit', sendComment);
+            p.innerHTML = singleIssue;
         }
     }
     //append the p to the content
@@ -95,11 +91,6 @@ var requestUpdate = function requestUpdate(e, form) {
         formAction += "?id=" + form.querySelector("#idField").value;
     }
 
-    //handle case of adding a comment
-    if (form.getAttribute('issueNum')) {
-        formAction += "?id=" + form.getAttribute('issueNum');
-    }
-
     //open a new xmlhttprequest based on passed form action/method
     var xhr = new XMLHttpRequest();
     xhr.open(formMethod, formAction);
@@ -115,14 +106,27 @@ var requestUpdate = function requestUpdate(e, form) {
     }
     //handle a post request
     if (formMethod === "post") {
-        //get the issue to pass to the server
-        var issueField = form.querySelector('#issueField');
-        //type used when parsing url query strings
-        xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
+        if (formAction === "/addIssue") {
+            //posting an issue
+            //get the issue to pass to the server
+            var issueField = form.querySelector('#issueField');
+            //type used when parsing url query strings
+            xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
 
-        //send an ajax request with the parsed form data
-        var formData = "issue=" + issueField.value;
-        xhr.send(formData);
+            //send an ajax request with the parsed form data
+            var formData = "issue=" + issueField.value;
+            xhr.send(formData);
+        } else {
+            //posting a comment
+            //get the issue to pass to the server
+            var commentField = form.querySelector('#commentField');
+            //type used when parsing url query strings
+            xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
+
+            //send an ajax request with the parsed form data
+            var _formData = "comment=" + commentField.value;
+            xhr.send(_formData);
+        }
     } else {
         //handle get or head requests
         //send basic ajax request
@@ -138,6 +142,7 @@ var init = function init() {
     //grab the relevent items from the page and start listening to them
     var issueForm = document.querySelector("#issueForm");
     var issueViewer = document.querySelector("#viewIssues");
+    var commentForm = document.querySelector("#commentForm");
     //functions to handle our requests
     var sendIssue = function sendIssue(e) {
         return requestUpdate(e, issueForm);
@@ -145,9 +150,13 @@ var init = function init() {
     var getIssue = function getIssue(e) {
         return requestUpdate(e, issueViewer);
     };
+    var updateComments = function updateComments(e) {
+        return requestUpdate(e, commentForm);
+    };
     //add event listeners to the send buttons
     issueForm.addEventListener('submit', sendIssue);
     issueViewer.addEventListener('submit', getIssue);
+    commentForm.addEventListener('submit', updateComments);
 };
 //load the init function when the page loads
 window.onload = init;

@@ -19,6 +19,7 @@ const port = process.env.PORT || process.env.NODE_PORT || 3000;
 const urlStruct = {
     GET: {
         '/': responseHandler.getIndex,
+        '/issues': responseHandler.getIssuePage,
         '/style.css': responseHandler.getCSS,
         '/bundle.js': responseHandler.getBundle,
         '/getIssues': responseHandler.getIssues,

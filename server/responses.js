@@ -5,6 +5,7 @@ const query = require('querystring');
 
 // vars for the html and css the client needs
 const index = fs.readFileSync(`${__dirname}/../hosted/client.html`);
+const issuePage = fs.readFileSync(`${__dirname}/../hosted/issues.html`);
 const css = fs.readFileSync(`${__dirname}/../hosted/style.css`);
 const jsBundle = fs.readFileSync(`${__dirname}/../hosted/bundle.js`);
 
@@ -20,6 +21,13 @@ const responseJSON = {};
 const getIndex = (request, response) => {
     response.writeHead(200, { 'Content-Type': 'text/html' });
     response.write(index);
+    response.end();
+};
+
+// returns the issue page for the client
+const getIssuePage = (request, response) => {
+    response.writeHead(200, { 'Content-Type': 'text/html' });
+    response.write(issuePage);
     response.end();
 };
 
@@ -151,6 +159,7 @@ const notRealMeta = (request, response) => respondJSONMeta(request, response, 40
 //export relevant functions
 module.exports = {
     getIndex,
+    getIssuePage,
     getCSS,
     getBundle,
     getIssues,

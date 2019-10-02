@@ -61,16 +61,7 @@ const handleResponse = (xhr, parseResponse) => {
         //if a single issue in response, add it to the screen with the comment form
         if(obj.singleIssue) {
             const singleIssue = JSON.stringify(obj.singleIssue);
-            p.innerHTML = `${singleIssue} \n 
-                <form id="commentForm" action="/addComment" method="post" issueNum=${singleIssue.id}>
-                    <label for="comment">Comment: </label>
-                    <textarea id="commentField" type="text" name="comment"></textarea>
-                    <input type="submit" value="Add Comment" />
-                </form>`;
-            //have to redo the init setup each time a comment form is pulled
-//            let commentForm = document.querySelector("#commentForm");
-//            let sendComment = (e) => requestUpdate(e, commentForm);
-//            commentForm.addEventListener('submit', sendComment);
+            p.innerHTML = singleIssue;
         }
     }
     //append the p to the content
@@ -88,11 +79,6 @@ const requestUpdate = (e, form) => {
         formAction+=`?id=${form.querySelector("#idField").value}`;
     }
 
-    //handle case of adding a comment
-    if(form.getAttribute('issueNum')){
-        formAction+=`?id=${form.getAttribute('issueNum')}`;
-    }
-    
     //open a new xmlhttprequest based on passed form action/method
     const xhr = new XMLHttpRequest();
     xhr.open(formMethod, formAction);
@@ -104,18 +90,29 @@ const requestUpdate = (e, form) => {
     }
     //handle a post request
     if(formMethod === "post") {
-        //get the issue to pass to the server
-        const issueField = form.querySelector('#issueField');
-        //type used when parsing url query strings
-        xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
+        if(formAction === "/addIssue"){ //posting an issue
+            //get the issue to pass to the server
+            const issueField = form.querySelector('#issueField');
+            //type used when parsing url query strings
+            xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
 
-        //send an ajax request with the parsed form data
-        const formData = `issue=${issueField.value}`;
-        xhr.send(formData);
+            //send an ajax request with the parsed form data
+            const formData = `issue=${issueField.value}`;
+            xhr.send(formData);
+        } else { //posting a comment
+            //get the issue to pass to the server
+            const commentField = form.querySelector('#commentField');
+            //type used when parsing url query strings
+            xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
+
+            //send an ajax request with the parsed form data
+            const formData = `comment=${commentField.value}`;
+            xhr.send(formData);
+        }
     } else { //handle get or head requests
         //send basic ajax request
         xhr.send();
-    } 
+    }
     //prevent the browser's default action (to send the form on its own)
     e.preventDefault();
     //return false to prevent the browser from trying to change page
@@ -126,12 +123,15 @@ const init = () => {
     //grab the relevent items from the page and start listening to them
     const issueForm = document.querySelector("#issueForm");
     const issueViewer = document.querySelector("#viewIssues");
+    const commentForm = document.querySelector("#commentForm");
     //functions to handle our requests
     const sendIssue = (e) => requestUpdate(e, issueForm);
     const getIssue = (e) => requestUpdate(e, issueViewer);
+    const updateComments = (e) => requestUpdate(e, commentForm);
     //add event listeners to the send buttons
     issueForm.addEventListener('submit', sendIssue);
     issueViewer.addEventListener('submit', getIssue);
+    commentForm.addEventListener('submit', updateComments);
 };
 //load the init function when the page loads
 window.onload = init;
