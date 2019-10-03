@@ -154,9 +154,15 @@ var init = function init() {
         return requestUpdate(e, commentForm);
     };
     //add event listeners to the send buttons
-    issueForm.addEventListener('submit', sendIssue);
-    issueViewer.addEventListener('submit', getIssue);
-    commentForm.addEventListener('submit', updateComments);
+    if (issueForm) {
+        issueForm.addEventListener('submit', sendIssue);
+    }
+    if (issueViewer) {
+        issueViewer.addEventListener('submit', getIssue);
+    }
+    if (commentForm) {
+        commentForm.addEventListener('submit', updateComments);
+    }
 };
 //load the init function when the page loads
 window.onload = init;
