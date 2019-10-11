@@ -44,7 +44,6 @@ const handleResponse = (xhr, parseResponse) => {
     }
     headerCol.appendChild(status);
     row.appendChild(headerCol);
-    content.innerHTML += `</div>`;
     let contentCol = document.createElement("div");
     contentCol.className = "col-12";
     //parse response if the request asked to do so and info isn't just being updated
@@ -63,20 +62,19 @@ const handleResponse = (xhr, parseResponse) => {
                 card.style.width = "18rem";
                 let cardHeader = document.createElement("div");
                 cardHeader.className = "card-header";
-                cardHeader.innerHTML += `<b>${i.id}:</b> ${i.issue}`;
+                cardHeader.innerHTML += `<b>${obj.issues[i].id}:</b> ${obj.issues[i].issue}`;
                 card.appendChild(cardHeader);
-                console.log(i);
-                console.log(i[comments]);
-                let issueComment = i.comments;
-                if(issueComment.length > 0){
+                let issueComments = obj.issues[i].comments;
+                if(issueComments.length > 0){
                     let commentList = document.createElement("ul");
                     commentList.className = "list-group list-group-flush";
-                    for(let c of i.comments){
+                    for(let c of issueComments){
                         let comment = document.createElement("li");
                         comment.className = "list-group-item";
                         comment.innerHTML += `${c}`;
                         commentList.appendChild(comment);
                     }
+                    card.appendChild(commentList);
                 }
                 contentCol.appendChild(card);
             }
@@ -94,7 +92,7 @@ const handleResponse = (xhr, parseResponse) => {
             if(issueComment.length > 0){
                 let commentList = document.createElement("ul");
                 commentList.className = "list-group list-group-flush";
-                for(let c of obj.singleIssue.comments){
+                for(let c of issueComment){
                     let comment = document.createElement("li");
                     comment.className = "list-group-item";
                     comment.innerHTML += `${c}`;

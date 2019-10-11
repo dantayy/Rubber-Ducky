@@ -56,7 +56,6 @@ var handleResponse = function handleResponse(xhr, parseResponse) {
     }
     headerCol.appendChild(status);
     row.appendChild(headerCol);
-    content.innerHTML += "</div>";
     var contentCol = document.createElement("div");
     contentCol.className = "col-12";
     //parse response if the request asked to do so and info isn't just being updated
@@ -75,12 +74,10 @@ var handleResponse = function handleResponse(xhr, parseResponse) {
                 card.style.width = "18rem";
                 var cardHeader = document.createElement("div");
                 cardHeader.className = "card-header";
-                cardHeader.innerHTML += "<b>" + i.id + ":</b> " + i.issue;
+                cardHeader.innerHTML += "<b>" + obj.issues[i].id + ":</b> " + obj.issues[i].issue;
                 card.appendChild(cardHeader);
-                console.log(i);
-                console.log(i[comments]);
-                var issueComment = i.comments;
-                if (issueComment.length > 0) {
+                var issueComments = obj.issues[i].comments;
+                if (issueComments.length > 0) {
                     var commentList = document.createElement("ul");
                     commentList.className = "list-group list-group-flush";
                     var _iteratorNormalCompletion = true;
@@ -88,7 +85,7 @@ var handleResponse = function handleResponse(xhr, parseResponse) {
                     var _iteratorError = undefined;
 
                     try {
-                        for (var _iterator = i.comments[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        for (var _iterator = issueComments[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                             var c = _step.value;
 
                             var comment = document.createElement("li");
@@ -110,6 +107,8 @@ var handleResponse = function handleResponse(xhr, parseResponse) {
                             }
                         }
                     }
+
+                    card.appendChild(commentList);
                 }
                 contentCol.appendChild(card);
             }
@@ -123,8 +122,8 @@ var handleResponse = function handleResponse(xhr, parseResponse) {
             _cardHeader.className = "card-header";
             _cardHeader.innerHTML += "<b>" + obj.singleIssue.id + ":</b> " + obj.singleIssue.issue;
             _card.appendChild(_cardHeader);
-            var _issueComment = obj.singleIssue.comments;
-            if (_issueComment.length > 0) {
+            var issueComment = obj.singleIssue.comments;
+            if (issueComment.length > 0) {
                 var _commentList = document.createElement("ul");
                 _commentList.className = "list-group list-group-flush";
                 var _iteratorNormalCompletion2 = true;
@@ -132,7 +131,7 @@ var handleResponse = function handleResponse(xhr, parseResponse) {
                 var _iteratorError2 = undefined;
 
                 try {
-                    for (var _iterator2 = obj.singleIssue.comments[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    for (var _iterator2 = issueComment[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
                         var _c = _step2.value;
 
                         var _comment = document.createElement("li");
