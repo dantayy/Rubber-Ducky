@@ -4,68 +4,110 @@ const handleResponse = (xhr, parseResponse) => {
     const content = document.querySelector("#content");
     //clear the content section
     content.innerHTML = "";
-    //create h1 and p to hold our response data for the page
-    const h1 = document.createElement('h1');
-    const p = document.createElement('p');
+    let row = document.createElement("div");
+    row.className = "row";
     //apply text to the h1 based on the status code
+    let headerCol = document.createElement("div");
+    headerCol.className = "col-12";
+    let status = document.createElement("h2");
     switch(xhr.status) {
         case 200: //success
-            h1.innerHTML = `<b>Success</b>`;
+            status.textContent = `Success`;
             break;
         case 201: //created
-            h1.innerHTML = `<b>Created</b>`;
+            status.textContent = `Created`;
             break;
         case 204: //updated
-            h1.innerHTML = `<b>Updated</b>`;
+            status.textContent = `Updated`;
             break;
         case 400: //bad request 
-            h1.innerHTML = `<b>Bad Request</b>`;
+            status.textContent = `Bad Request`;
             break;
         case 401: //unauthorized 
-            h1.innerHTML = `<b>Unauthorized</b>`;
+            status.textContent = `Unauthorized`;
             break;
         case 403: //forbidden 
-            h1.innerHTML = `<b>Forbidden</b>`;
+            status.textContent = `Forbidden`;
             break;
         case 404: //not found (requested resource does not exist)
-            h1.innerHTML = `<b>Resource Not Found</b>`;
+            status.textContent = `Resource Not Found`;
             break;
         case 500: //internal server error
-            h1.innerHTML = `<b>Internal Server Error</b>`;
+            status.textContent = `Internal Server Error`;
             break;
         case 501: //not implemented
-            h1.innerHTML = `<b>Not Implemented</b>`;
+            status.textContent = `Not Implemented`;
             break;
         default: //default other errors we are not handling in this example
-            h1.innerHTML = `<b>Error code not implemented by client.</b>`;
+            status.textContent = `Error code not implemented by client.`;
             break;
     }
-    //append the h1 to the content.
-    content.appendChild(h1);
-    // default message
-    p.innerHTML = '(No Content)';
-
+    headerCol.appendChild(status);
+    row.appendChild(headerCol);
+    content.innerHTML += `</div>`;
+    let contentCol = document.createElement("div");
+    contentCol.className = "col-12";
     //parse response if the request asked to do so and info isn't just being updated
     if(parseResponse && xhr.status !== 204){
         const obj = JSON.parse(xhr.response);
         console.log(obj);
         //if message in response, add to screen
         if(obj.message) {
-            p.innerHTML = `Message: ${obj.message}`;
+            contentCol.innerHTML += `<p>Message: ${obj.message}</p>`;
         }
         //if issues in response, add to screen
         if(obj.issues) {
-            const issues = JSON.stringify(obj.issues);
-            p.innerHTML = issues;
+            for(let i in obj.issues){
+                let card = document.createElement("div");
+                card.className = "card";
+                card.style.width = "18rem";
+                let cardHeader = document.createElement("div");
+                cardHeader.className = "card-header";
+                cardHeader.innerHTML += `<b>${i.id}:</b> ${i.issue}`;
+                card.appendChild(cardHeader);
+                console.log(i);
+                console.log(i[comments]);
+                let issueComment = i.comments;
+                if(issueComment.length > 0){
+                    let commentList = document.createElement("ul");
+                    commentList.className = "list-group list-group-flush";
+                    for(let c of i.comments){
+                        let comment = document.createElement("li");
+                        comment.className = "list-group-item";
+                        comment.innerHTML += `${c}`;
+                        commentList.appendChild(comment);
+                    }
+                }
+                contentCol.appendChild(card);
+            }
         }
         //if a single issue in response, add it to the screen with the comment form
         if(obj.singleIssue) {
-            const singleIssue = JSON.stringify(obj.singleIssue);
-            p.innerHTML = singleIssue;
+            let card = document.createElement("div");
+            card.className = "card";
+            card.style.width = "18rem";
+            let cardHeader = document.createElement("div");
+            cardHeader.className = "card-header";
+            cardHeader.innerHTML += `<b>${obj.singleIssue.id}:</b> ${obj.singleIssue.issue}`;
+            card.appendChild(cardHeader);
+            let issueComment = obj.singleIssue.comments;
+            if(issueComment.length > 0){
+                let commentList = document.createElement("ul");
+                commentList.className = "list-group list-group-flush";
+                for(let c of obj.singleIssue.comments){
+                    let comment = document.createElement("li");
+                    comment.className = "list-group-item";
+                    comment.innerHTML += `${c}`;
+                    commentList.appendChild(comment);
+                }
+            }
+            contentCol.appendChild(card);
         }
+    } else { // default message
+        contentCol.innerHTML = '<p>(No Content)</p>';
     }
-    //append the p to the content
-    content.appendChild(p);
+    row.appendChild(contentCol);
+    content.appendChild(row);
 };
 
 //function to send request to server

@@ -6,78 +6,163 @@ var handleResponse = function handleResponse(xhr, parseResponse) {
     var content = document.querySelector("#content");
     //clear the content section
     content.innerHTML = "";
-    //create h1 and p to hold our response data for the page
-    var h1 = document.createElement('h1');
-    var p = document.createElement('p');
+    var row = document.createElement("div");
+    row.className = "row";
     //apply text to the h1 based on the status code
+    var headerCol = document.createElement("div");
+    headerCol.className = "col-12";
+    var status = document.createElement("h2");
     switch (xhr.status) {
         case 200:
             //success
-            h1.innerHTML = "<b>Success</b>";
+            status.textContent = "Success";
             break;
         case 201:
             //created
-            h1.innerHTML = "<b>Created</b>";
+            status.textContent = "Created";
             break;
         case 204:
             //updated
-            h1.innerHTML = "<b>Updated</b>";
+            status.textContent = "Updated";
             break;
         case 400:
             //bad request 
-            h1.innerHTML = "<b>Bad Request</b>";
+            status.textContent = "Bad Request";
             break;
         case 401:
             //unauthorized 
-            h1.innerHTML = "<b>Unauthorized</b>";
+            status.textContent = "Unauthorized";
             break;
         case 403:
             //forbidden 
-            h1.innerHTML = "<b>Forbidden</b>";
+            status.textContent = "Forbidden";
             break;
         case 404:
             //not found (requested resource does not exist)
-            h1.innerHTML = "<b>Resource Not Found</b>";
+            status.textContent = "Resource Not Found";
             break;
         case 500:
             //internal server error
-            h1.innerHTML = "<b>Internal Server Error</b>";
+            status.textContent = "Internal Server Error";
             break;
         case 501:
             //not implemented
-            h1.innerHTML = "<b>Not Implemented</b>";
+            status.textContent = "Not Implemented";
             break;
         default:
             //default other errors we are not handling in this example
-            h1.innerHTML = "<b>Error code not implemented by client.</b>";
+            status.textContent = "Error code not implemented by client.";
             break;
     }
-    //append the h1 to the content.
-    content.appendChild(h1);
-    // default message
-    p.innerHTML = '(No Content)';
-
+    headerCol.appendChild(status);
+    row.appendChild(headerCol);
+    content.innerHTML += "</div>";
+    var contentCol = document.createElement("div");
+    contentCol.className = "col-12";
     //parse response if the request asked to do so and info isn't just being updated
     if (parseResponse && xhr.status !== 204) {
         var obj = JSON.parse(xhr.response);
         console.log(obj);
         //if message in response, add to screen
         if (obj.message) {
-            p.innerHTML = "Message: " + obj.message;
+            contentCol.innerHTML += "<p>Message: " + obj.message + "</p>";
         }
         //if issues in response, add to screen
         if (obj.issues) {
-            var issues = JSON.stringify(obj.issues);
-            p.innerHTML = issues;
+            for (var i in obj.issues) {
+                var card = document.createElement("div");
+                card.className = "card";
+                card.style.width = "18rem";
+                var cardHeader = document.createElement("div");
+                cardHeader.className = "card-header";
+                cardHeader.innerHTML += "<b>" + i.id + ":</b> " + i.issue;
+                card.appendChild(cardHeader);
+                console.log(i);
+                console.log(i[comments]);
+                var issueComment = i.comments;
+                if (issueComment.length > 0) {
+                    var commentList = document.createElement("ul");
+                    commentList.className = "list-group list-group-flush";
+                    var _iteratorNormalCompletion = true;
+                    var _didIteratorError = false;
+                    var _iteratorError = undefined;
+
+                    try {
+                        for (var _iterator = i.comments[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                            var c = _step.value;
+
+                            var comment = document.createElement("li");
+                            comment.className = "list-group-item";
+                            comment.innerHTML += "" + c;
+                            commentList.appendChild(comment);
+                        }
+                    } catch (err) {
+                        _didIteratorError = true;
+                        _iteratorError = err;
+                    } finally {
+                        try {
+                            if (!_iteratorNormalCompletion && _iterator.return) {
+                                _iterator.return();
+                            }
+                        } finally {
+                            if (_didIteratorError) {
+                                throw _iteratorError;
+                            }
+                        }
+                    }
+                }
+                contentCol.appendChild(card);
+            }
         }
         //if a single issue in response, add it to the screen with the comment form
         if (obj.singleIssue) {
-            var singleIssue = JSON.stringify(obj.singleIssue);
-            p.innerHTML = singleIssue;
+            var _card = document.createElement("div");
+            _card.className = "card";
+            _card.style.width = "18rem";
+            var _cardHeader = document.createElement("div");
+            _cardHeader.className = "card-header";
+            _cardHeader.innerHTML += "<b>" + obj.singleIssue.id + ":</b> " + obj.singleIssue.issue;
+            _card.appendChild(_cardHeader);
+            var _issueComment = obj.singleIssue.comments;
+            if (_issueComment.length > 0) {
+                var _commentList = document.createElement("ul");
+                _commentList.className = "list-group list-group-flush";
+                var _iteratorNormalCompletion2 = true;
+                var _didIteratorError2 = false;
+                var _iteratorError2 = undefined;
+
+                try {
+                    for (var _iterator2 = obj.singleIssue.comments[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                        var _c = _step2.value;
+
+                        var _comment = document.createElement("li");
+                        _comment.className = "list-group-item";
+                        _comment.innerHTML += "" + _c;
+                        _commentList.appendChild(_comment);
+                    }
+                } catch (err) {
+                    _didIteratorError2 = true;
+                    _iteratorError2 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                            _iterator2.return();
+                        }
+                    } finally {
+                        if (_didIteratorError2) {
+                            throw _iteratorError2;
+                        }
+                    }
+                }
+            }
+            contentCol.appendChild(_card);
         }
+    } else {
+        // default message
+        contentCol.innerHTML = '<p>(No Content)</p>';
     }
-    //append the p to the content
-    content.appendChild(p);
+    row.appendChild(contentCol);
+    content.appendChild(row);
 };
 
 //function to send request to server

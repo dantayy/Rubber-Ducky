@@ -1,21 +1,13 @@
-html, body {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
+* {
+    text-align: center;
+    margin: auto;
 }
 
-#top {
-  text-align: center;
-  margin: 0 auto;
+body {
+    padding: 3em;
 }
 
-#top h1 {
-  font-size: 2em;
-}
-
-#content {
-  margin-top: 100px;
-  font-size: 2em;
-  text-align: center;
+textarea {
+    width: 20em;
+    height: 10em;
 }
