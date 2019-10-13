@@ -1,18 +1,17 @@
 // pull in the file system module
 const fs = require('fs');
 
-// vars for the html and css the client needs
+// vars for the html, css, and js the client needs
 const index = fs.readFileSync(`${__dirname}/../hosted/client.html`);
-const issuePage = fs.readFileSync(`${__dirname}/../hosted/issues.html`);
+const notRealPage = fs.readFileSync(`${__dirname}/../hosted/notReal.html`);
 const css = fs.readFileSync(`${__dirname}/../hosted/style.css`);
-const clientJs = fs.readFileSync(`${__dirname}/../client/client.js`);
 const jsBundle = fs.readFileSync(`${__dirname}/../hosted/bundle.js`);
 
 // Issues object container and id var to be incremented when new issues are made
 const issues = {};
 let issueId = 0;
 
-// for object to respond with when there are status messages/ids
+// object to respond with when there are status messages/ids
 const responseJSON = {};
 
 // returns the base page for the client
@@ -22,24 +21,10 @@ const getIndex = (request, response) => {
   response.end();
 };
 
-// returns the issue page for the client
-const getIssuePage = (request, response) => {
-  response.writeHead(200, { 'Content-Type': 'text/html' });
-  response.write(issuePage);
-  response.end();
-};
-
 // returns the specified css for the client
 const getCSS = (request, response) => {
   response.writeHead(200, { 'Content-Type': 'text/css' });
   response.write(css);
-  response.end();
-};
-
-// function for getting the client's js directly
-const getClientJs = (request, response) => {
-  response.writeHead(200, { 'Content-Type': 'application/javascript' });
-  response.write(clientJs);
   response.end();
 };
 
@@ -74,8 +59,6 @@ const addIssue = (request, response, postParams) => {
     return respondJSON(request, response, 400, responseJSON);
   }
 
-  // response code for new issue being created
-  const responseCode = 201;
   // new issue object located at the index of the id
   issues[issueId] = {};
   // set the issue's parameters
@@ -87,7 +70,7 @@ const addIssue = (request, response, postParams) => {
   delete responseJSON.id;
   responseJSON.message = `Created Issue #${issueId}`;
   issueId++;
-  return respondJSON(request, response, responseCode, responseJSON);
+  return respondJSON(request, response, 201, responseJSON);
 };
 
 // add a comment to an issue
@@ -108,26 +91,27 @@ const addComment = (request, response, postParams, params) => {
   }
 
   // update the issue's comment list with the submitted comment
-  const responseCode = 204;
   issues[params.id].comments.push(postParams.comment);
-  return respondJSONMeta(request, response, responseCode);
+  return respondJSONMeta(request, response, 204);
 };
 
 // return the issues list
 const getIssues = (request, response, params) => {
-  if (params.id && issues[params.id]) {
+  if (params.id && issues[params.id]) { // case of requesting a specific issue
     const singleIssue = issues[params.id];
     return respondJSON(request, response, 200, { singleIssue });
   }
   return respondJSON(request, response, 200, { issues });
 };
 
-// send back notReal info
-const notReal = (request, response) => {
-  responseJSON.id = 'notFound';
-  responseJSON.message = 'The page you are looking for was not found.';
+// return meta info for an issues request
+const getIssuesMeta = (request, response) => respondJSONMeta(request, response, 200);
 
-  return respondJSON(request, response, 404, responseJSON);
+// returns the 404 page for the client
+const notReal = (request, response) => {
+  response.writeHead(200, { 'Content-Type': 'text/html' });
+  response.write(notRealPage);
+  response.end();
 };
 
 // send back only the header data for a page that doesn't exist
@@ -136,11 +120,10 @@ const notRealMeta = (request, response) => respondJSONMeta(request, response, 40
 // export relevant functions
 module.exports = {
   getIndex,
-  getIssuePage,
   getCSS,
-  getClientJs,
   getBundle,
   getIssues,
+  getIssuesMeta,
   notReal,
   notRealMeta,
   addIssue,

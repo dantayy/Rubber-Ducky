@@ -1,12 +1,40 @@
+//helper function for making cards, takes obj to make card from and page element to append to
+const cardMaker = (obj, pageElement) => { //assumes object is an issue
+    let card = document.createElement("div");
+    card.className = "card";
+    //make the head of the card
+    let cardHeader = document.createElement("div");
+    cardHeader.className = "card-header";
+    cardHeader.innerHTML += `<b>${obj.id}:</b> ${obj.issue}`;
+    card.appendChild(cardHeader);
+    //make the comments section of the card
+    let issueComments = obj.comments;
+    if(issueComments.length > 0){ //don't append if no comments
+        let commentSectionHeader = document.createElement("div");
+        commentSectionHeader.className = "card-body";
+        commentSectionHeader.innerHTML = "<h5 class='card-title'>Comments</h5>";
+        card.appendChild(commentSectionHeader);
+        let commentList = document.createElement("ul");
+        commentList.className = "list-group list-group-flush";
+        for(let c of issueComments){
+            let comment = document.createElement("li");
+            comment.className = "list-group-item";
+            comment.innerHTML = `${c}`;
+            commentList.appendChild(comment);
+        }
+        card.appendChild(commentList);
+    }
+    //append to passed page element
+    pageElement.appendChild(card);
+}
+
 //function to handle xhr response
 const handleResponse = (xhr, parseResponse) => {
     //grab the content section
     const content = document.querySelector("#content");
     //clear the content section
     content.innerHTML = "";
-    let row = document.createElement("div");
-    row.className = "row";
-    //apply text to the h1 based on the status code
+    //create a header based on the status code
     let headerCol = document.createElement("div");
     headerCol.className = "col-12";
     let status = document.createElement("h2");
@@ -23,89 +51,38 @@ const handleResponse = (xhr, parseResponse) => {
         case 400: //bad request 
             status.textContent = `Bad Request`;
             break;
-        case 401: //unauthorized 
-            status.textContent = `Unauthorized`;
-            break;
-        case 403: //forbidden 
-            status.textContent = `Forbidden`;
-            break;
         case 404: //not found (requested resource does not exist)
             status.textContent = `Resource Not Found`;
             break;
-        case 500: //internal server error
-            status.textContent = `Internal Server Error`;
-            break;
-        case 501: //not implemented
-            status.textContent = `Not Implemented`;
-            break;
-        default: //default other errors we are not handling in this example
-            status.textContent = `Error code not implemented by client.`;
+        default: //default other errors we are not handling
+            status.textContent = `Status code not implemented by client.`;
             break;
     }
     headerCol.appendChild(status);
-    row.appendChild(headerCol);
-    let contentCol = document.createElement("div");
-    contentCol.className = "col-12";
+    content.appendChild(headerCol);
+    //create an element to display the body of the response, if there is one
+    let bodyCol = document.createElement("div");
+    bodyCol.className = "col-12";
     //parse response if the request asked to do so and info isn't just being updated
     if(parseResponse && xhr.status !== 204){
         const obj = JSON.parse(xhr.response);
         console.log(obj);
         //if message in response, add to screen
         if(obj.message) {
-            contentCol.innerHTML += `<p>Message: ${obj.message}</p>`;
+            bodyCol.innerHTML = `<p>Message: ${obj.message}</p>`;
         }
-        //if issues in response, add to screen
+        //if issues in response, add to created element
         if(obj.issues) {
             for(let i in obj.issues){
-                let card = document.createElement("div");
-                card.className = "card";
-                card.style.width = "18rem";
-                let cardHeader = document.createElement("div");
-                cardHeader.className = "card-header";
-                cardHeader.innerHTML += `<b>${obj.issues[i].id}:</b> ${obj.issues[i].issue}`;
-                card.appendChild(cardHeader);
-                let issueComments = obj.issues[i].comments;
-                if(issueComments.length > 0){
-                    let commentList = document.createElement("ul");
-                    commentList.className = "list-group list-group-flush";
-                    for(let c of issueComments){
-                        let comment = document.createElement("li");
-                        comment.className = "list-group-item";
-                        comment.innerHTML += `${c}`;
-                        commentList.appendChild(comment);
-                    }
-                    card.appendChild(commentList);
-                }
-                contentCol.appendChild(card);
+                cardMaker(obj.issues[i], bodyCol);
             }
-        }
-        //if a single issue in response, add it to the screen with the comment form
-        if(obj.singleIssue) {
-            let card = document.createElement("div");
-            card.className = "card";
-            card.style.width = "18rem";
-            let cardHeader = document.createElement("div");
-            cardHeader.className = "card-header";
-            cardHeader.innerHTML += `<b>${obj.singleIssue.id}:</b> ${obj.singleIssue.issue}`;
-            card.appendChild(cardHeader);
-            let issueComment = obj.singleIssue.comments;
-            if(issueComment.length > 0){
-                let commentList = document.createElement("ul");
-                commentList.className = "list-group list-group-flush";
-                for(let c of issueComment){
-                    let comment = document.createElement("li");
-                    comment.className = "list-group-item";
-                    comment.innerHTML += `${c}`;
-                    commentList.appendChild(comment);
-                }
-            }
-            contentCol.appendChild(card);
+        } else if(obj.singleIssue) { //case of a single issue
+            cardMaker(obj.singleIssue, bodyCol);
         }
     } else { // default message
-        contentCol.innerHTML = '<p>(No Content)</p>';
+        bodyCol.innerHTML = '<p>(No Content)</p>';
     }
-    row.appendChild(contentCol);
-    content.appendChild(row);
+    content.appendChild(bodyCol);
 };
 
 //function to send request to server
@@ -122,6 +99,9 @@ const requestUpdate = (e, form) => {
     //open a new xmlhttprequest based on passed form action/method
     const xhr = new XMLHttpRequest();
     xhr.open(formMethod, formAction);
+    //Set the accept headers to the desired response mime type
+    //Server does NOT have to support this. It is a gentle request.
+    xhr.setRequestHeader ("Accept", 'application/json');
     //when a response is recieved call the handleResponse function
     if(formMethod === "head"){
         xhr.onload = () => handleResponse(xhr, false);
@@ -130,25 +110,20 @@ const requestUpdate = (e, form) => {
     }
     //handle a post request
     if(formMethod === "post") {
+        //type used when parsing url query strings
+        xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
+        let formData;
         if(formAction === "/addIssue"){ //posting an issue
             //get the issue to pass to the server
             const issueField = form.querySelector('#issueField');
-            //type used when parsing url query strings
-            xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
-
-            //send an ajax request with the parsed form data
-            const formData = `issue=${issueField.value}`;
-            xhr.send(formData);
+            formData = `issue=${issueField.value}`;
         } else { //posting a comment
-            //get the issue to pass to the server
+            //get the comment to pass to the server
             const commentField = form.querySelector('#commentField');
-            //type used when parsing url query strings
-            xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
-
-            //send an ajax request with the parsed form data
-            const formData = `comment=${commentField.value}`;
-            xhr.send(formData);
+            formData = `comment=${commentField.value}`;
         }
+        //send an ajax request with the parsed form data
+        xhr.send(formData);
     } else { //handle get or head requests
         //send basic ajax request
         xhr.send();

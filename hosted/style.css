@@ -1,13 +1,47 @@
 * {
     text-align: center;
     margin: 0 auto;
+    font-family: 'Lato', sans-serif;
+    color: #34312A;
 }
 
 body {
     padding: 3em;
+    background-color: #FDD900;
+}
+
+h1, h2, h5, b {
+    font-family: 'Abril Fatface', cursive;
 }
 
 textarea {
-    width: 20em;
+    width: 75%;
     height: 10em;
+    text-align: left;
+}
+
+input[type=submit] {
+    background-color: #70CBC1;
+    font-family: 'Lato', sans-serif;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.row {
+    margin: 1em;
+}
+
+.card {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    text-align: left;
+}
+
+
+@media (max-width: 780px) {
+    body {
+        padding: 0;
+    }
 }

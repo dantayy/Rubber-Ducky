@@ -4,40 +4,25 @@
         <!-- Required meta tags for bootstrap-->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Imported fonts -->
+        <link href="https://fonts.googleapis.com/css?family=Abril+Fatface|Lato&display=swap" rel="stylesheet">
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
         <!-- Custom CSS -->
         <link rel="stylesheet" type="text/css" href="/style.css">
         <!-- Scripts for the converted server code -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-        <script src="client.js"></script>
+        <script src="bundle.js"></script>
         <!-- Title of page -->
-        <title>Rubber Ducky!</title>
+        <title>Page Not Found</title>
     </head>
     <body>
         <div class="container-fluid">
             <div class="row">
-                <h1>Issues</h1>
+                <h1>Uh oh!  This page doesn't exist!</h1>
             </div>
-            <form class="row" id="viewIssues" action="/getIssues" method="get">
-                <div class="col-12">
-                    <input id="idField" placeholder="(optional) issue id" type="text" name="id" />
-                    <input type="submit" value="View Issues" />
-                </div>
-            </form>
-            <form class="row" id="commentForm" action="/addComment" method="post">
-                <div class="col-12">
-                    <textarea id="commentField" placeholder="comment goes here" type="text" name="comment"></textarea>
-                </div>
-                <div class="col-12">
-                    <input id="idField" placeholder="(required) issue id" type="text" name="id" />
-                    <input type="submit" value="Add Comment" />
-                </div>
-            </form>
             <div class="row">
-                <a href="/">Home Page!</a>
-            </div>
-            <div class="row" id="content">
+                <a id="homeButton" href="/"><input type="submit" value="Home Page" /></a>
             </div>
         </div>
         <!-- Scripts for Bootstrap -->

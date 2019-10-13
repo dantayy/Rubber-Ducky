@@ -7,6 +7,7 @@ const query = require('querystring');
 // pull in our custom file
 const responseHandler = require('./responses.js');
 
+// port to listen on
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 // here we create a object to route our requests to the proper
@@ -19,7 +20,6 @@ const port = process.env.PORT || process.env.NODE_PORT || 3000;
 const urlStruct = {
   GET: {
     '/': responseHandler.getIndex,
-    '/issues': responseHandler.getIssuePage,
     '/style.css': responseHandler.getCSS,
     '/client.js': responseHandler.getClientJs,
     '/bundle.js': responseHandler.getBundle,
@@ -27,6 +27,7 @@ const urlStruct = {
     '/notReal': responseHandler.notReal,
   },
   HEAD: {
+    '/getIssues': responseHandler.getIssuesMeta,
     '/notReal': responseHandler.notRealMeta,
   },
   POST: {
@@ -52,7 +53,7 @@ const handlePost = (request, response, parsedUrl, params) => {
     body.push(chunk);
   });
 
-  // make data processed easier to handle by putting the params into an obj
+  // perform the requested function once all the data has been processed
   request.on('end', () => {
     const bodyString = Buffer.concat(body).toString();
     const bodyParams = query.parse(bodyString);
